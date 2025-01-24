@@ -41,17 +41,33 @@ const userSchema = new mongoose.Schema({
   },
   // Seller specific fields
   farmDetails: {
-    farmSize: Number,
-    primaryCrops: [String],
-    farmAddress: String,
-    required: function() { return this.role === 'seller'; }
+    type: {
+      farmSize: Number,
+      primaryCrops: [String],
+      farmAddress: String
+    },
+    required: [
+      function() { 
+        return this.role === 'seller';
+      },
+      'Farm details are required for sellers'
+    ],
+    default: undefined
   },
   // Buyer specific fields
   businessDetails: {
-    companyName: String,
-    businessType: String,
-    gstNumber: String,
-    required: function() { return this.role === 'buyer'; }
+    type: {
+      companyName: String,
+      businessType: String,
+      gstNumber: String
+    },
+    required: [
+      function() {
+        return this.role === 'buyer';
+      },
+      'Business details are required for buyers'
+    ],
+    default: undefined
   },
   isVerified: {
     type: Boolean,

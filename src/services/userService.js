@@ -1,5 +1,4 @@
 import User from '../db/models/Users.js';
-import jwt from 'jsonwebtoken';
 import { ManagementClient } from 'auth0';
 
 const auth0Management = new ManagementClient({
@@ -9,6 +8,7 @@ const auth0Management = new ManagementClient({
 });
 
 export const createUser = async (userData, auth0UserId) => {
+  // Validate role
   if (!['buyer', 'seller'].includes(userData.role)) {
     throw new Error('Invalid role specified');
   }
@@ -21,53 +21,91 @@ export const createUser = async (userData, auth0UserId) => {
     throw new Error('Business details are required for buyers');
   }
 
-  const user = await User.create({
-    ...userData,
-    auth0Id: auth0UserId
-  });
-  return user;
-};
+  try {
+    // Get user info from Auth0
+    const auth0User = await auth0Management.getUser({ id: auth0UserId });
+    
+    // Create user in our database
+    const user = await User.create({
+      auth0Id: auth0UserId,
+      email: auth0User.email,
+      name: userData.name || auth0User.name,
+      role: userData.role,
+      phone: userData.phone,
+      location: userData.location,
+      farmDetails: userData.farmDetails,
+      businessDetails: userData.businessDetails,
+      isVerified: false,
+      active: true
+    });
 
-export const loginUser = async (email, password, role) => {
-  const user = await User.findOne({ email, role }).select('+password');
-  
-  if (!user) {
-    throw new Error(`Invalid credentials for ${role}`);
+    // Update Auth0 user metadata with our database user ID
+    await auth0Management.updateUserMetadata(
+      { id: auth0UserId },
+      { app_user_id: user._id.toString() }
+    );
+
+    return user;
+  } catch (error) {
+    throw new Error(`Error creating user: ${error.message}`);
   }
-
-  if (!(await user.comparePassword(password))) {
-    throw new Error('Invalid password');
-  }
-  
-  const token = jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN }
-  );
-  
-  return { user, token };
 };
 
-export const getUserById = async (id) => {
-  return await User.findById(id);
-};
+// export const getUserByAuth0Id = async (auth0Id) => {
+//   try {
+//     const user = await User.findOne({ auth0Id });
+//     if (!user) {
+//       throw new Error('User not found');
+//     }
+//     return user;
+//   } catch (error) {
+//     throw new Error(`Error fetching user: ${error.message}`);
+//   }
+// };
 
-export const getUserByAuth0Id = async (auth0Id) => {
-  return await User.findOne({ auth0Id });
-};
+// export const getUserById = async (id) => {
+//   try {
+//     const user = await User.findById(id);
+//     if (!user) {
+//       throw new Error('User not found');
+//     }
+//     return user;
+//   } catch (error) {
+//     throw new Error(`Error fetching user: ${error.message}`);
+//   }
+// };
 
-export const updateUser = async (id, updateData) => {
-  return await User.findByIdAndUpdate(id, updateData, { 
-    new: true, 
-    runValidators: true 
-  });
-};
+// export const updateUser = async (id, updateData) => {
+//   try {
+//     const user = await User.findByIdAndUpdate(
+//       id,
+//       updateData,
+//       { new: true, runValidators: true }
+//     );
+//     if (!user) {
+//       throw new Error('User not found');
+//     }
+//     return user;
+//   } catch (error) {
+//     throw new Error(`Error updating user: ${error.message}`);
+//   }
+// };
 
-export const updateUserMetadata = async (auth0Id, metadata) => {
-  await auth0Management.updateUserMetadata({ id: auth0Id }, metadata);
-  return await getUserByAuth0Id(auth0Id);
-};
+// export const deleteUser = async (id) => {
+//   try {
+//     const user = await User.findById(id);
+//     if (!user) {
+//       throw new Error('User not found');
+//     }
 
-export const deleteUser = async (id) => {
-  return await User.findByIdAndDelete(id);
-};
+//     // Delete from Auth0
+//     await auth0Management.deleteUser({ id: user.auth0Id });
+
+//     // Delete from our database
+//     await User.findByIdAndDelete(id);
+
+//     return true;
+//   } catch (error) {
+//     throw new Error(`Error deleting user: ${error.message}`);
+//   }
+// };

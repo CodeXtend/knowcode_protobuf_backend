@@ -1,23 +1,22 @@
-import express from 'express';
-import * as wasteController from '../controllers/wasteController.js';
-import { checkJwt } from '../config/auth0Config.js';
-import { checkRole } from '../middleware/checkRole.js';
+// import express from 'express';
+// import * as wasteController from '../controllers/wasteController.js';
+// import { checkRole } from '../middleware/checkRole.js';
 
-const router = express.Router();
+// const router = express.Router();
 
-// Public routes
-router.get('/search', wasteController.searchWaste);
-router.get('/:id', wasteController.getWaste);
+// // Public routes
+// router.get('/search', wasteController.searchWaste);
+// router.get('/:id', wasteController.getWaste);
 
-// Protected routes
-router.use(checkJwt);
+// // Protected routes
+// router.use(checkJwt);
 
-// Seller only routes - requires both authentication and seller role
-router.use(checkRole('seller'));
+// // Seller only routes - requires both authentication and seller role
+// router.use(checkRole('seller'));
 
-router.post('/', wasteController.createWasteEntry);
-router.get('/my-listings', wasteController.getMyWaste);
-router.patch('/:id', wasteController.updateWaste);
-router.delete('/:id', wasteController.deleteWaste);
+// router.post('/', wasteController.createWasteEntry);
+// router.get('/my-listings', wasteController.getMyWaste);
+// router.patch('/:id', wasteController.updateWaste);
+// router.delete('/:id', wasteController.deleteWaste);
 
-export default router;
+// export default router;
