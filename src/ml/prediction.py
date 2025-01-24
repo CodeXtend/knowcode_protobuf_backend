@@ -31,8 +31,18 @@ class AgriculturePredictor:
         """Create comprehensive Indian crops database"""
         crops_data = {
             # Cereals
-            "rice": {"yield_factor": 0.4, "waste_factor": 0.1, "price_per_ton": 20000},
-            "wheat": {"yield_factor": 0.35, "waste_factor": 0.08, "price_per_ton": 22000},
+            "rice": {
+                "yield_factor": 0.4, 
+                "waste_factor": 0.1, 
+                "price_per_ton": 20000,
+                "waste_price_per_ton": 2000  # 10% of crop price
+            },
+            "wheat": {
+                "yield_factor": 0.35, 
+                "waste_factor": 0.08, 
+                "price_per_ton": 22000,
+                "waste_price_per_ton": 2200
+            },
             "maize": {"yield_factor": 0.45, "waste_factor": 0.12, "price_per_ton": 18000},
             "sorghum": {"yield_factor": 0.3, "waste_factor": 0.1, "price_per_ton": 16000},
             "pearl_millet": {"yield_factor": 0.25, "waste_factor": 0.1, "price_per_ton": 15000},
@@ -108,6 +118,11 @@ class AgriculturePredictor:
             "chrysanthemum": {"yield_factor": 0.4, "waste_factor": 0.3, "price_per_ton": 60000},
             "gladiolus": {"yield_factor": 0.4, "waste_factor": 0.3, "price_per_ton": 80000}
         }
+        
+        # Add waste_price_per_ton for all crops (10% of crop price)
+        for crop in crops_data:
+            if 'waste_price_per_ton' not in crops_data[crop]:
+                crops_data[crop]['waste_price_per_ton'] = crops_data[crop]['price_per_ton'] * 0.1
         
         with open(self.crops_cache_file, 'w', encoding='utf-8') as f:
             json.dump(crops_data, f)
@@ -215,9 +230,13 @@ class AgriculturePredictor:
         base_yield = land_area * crop_data.get('yield_factor', 0.4)
         base_waste = base_yield * crop_data.get('waste_factor', 0.1)
         
-        # Get price with fallback
-        price_per_ton = crop_data.get('price_per_ton', 20000)  # Default 20000 if not specified
-        estimated_profit = base_yield * price_per_ton
+        # Calculate profits
+        price_per_ton = crop_data.get('price_per_ton', 20000)
+        waste_price_per_ton = crop_data.get('waste_price_per_ton', price_per_ton * 0.1)
+        
+        crop_profit = base_yield * price_per_ton
+        waste_profit = base_waste * waste_price_per_ton
+        total_profit = crop_profit + waste_profit
 
         return {
             'crop': matched_crop,
@@ -225,7 +244,10 @@ class AgriculturePredictor:
             'predicted_yield': round(base_yield, 2),
             'predicted_waste': round(base_waste, 2),
             'price_per_ton': price_per_ton,
-            'estimated_profit': round(estimated_profit, 2)
+            'waste_price_per_ton': waste_price_per_ton,
+            'crop_profit': round(crop_profit, 2),
+            'waste_profit': round(waste_profit, 2),
+            'total_profit': round(total_profit, 2)
         }
 
 if __name__ == "__main__":
@@ -247,9 +269,16 @@ if __name__ == "__main__":
         print(f"\nError: {result['error']}")
     else:
         print("\nPrediction Results:")
-        print(f"Crop: {result['crop']}")
+        print("-" * 50)
+        print(f"Crop Type: {result['crop'].title()}")
         print(f"Location: {result['location']}")
-        print(f"Expected Yield: {result['predicted_yield']} tons")
-        print(f"Expected Waste: {result['predicted_waste']} tons")
-        print(f"Price per ton: ₹{result['price_per_ton']}")
-        print(f"Estimated Profit: ₹{result['estimated_profit']}")
+        print(f"Expected Yield: {result['predicted_yield']:,.2f} tons")
+        print(f"Expected Waste: {result['predicted_waste']:,.2f} tons")
+        print("\nFinancial Analysis:")
+        print("-" * 50)
+        print(f"Crop Price per ton: ₹{result['price_per_ton']:,.2f}")
+        print(f"Waste Price per ton: ₹{result['waste_price_per_ton']:,.2f}")
+        print(f"Crop Revenue: ₹{result['crop_profit']:,.2f}")
+        print(f"Waste Revenue: ₹{result['waste_profit']:,.2f}")
+        print("-" * 50)
+        print(f"Total Estimated Profit: ₹{result['total_profit']:,.2f}")
