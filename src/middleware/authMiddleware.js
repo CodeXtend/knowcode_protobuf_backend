@@ -1,6 +1,5 @@
 import jwksRsa from "jwks-rsa";
 import jwt from "jsonwebtoken";
-import redisClient from "../config/redisConfig.js";
 
 const client = jwksRsa({
   jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`,
@@ -39,23 +38,16 @@ const authMiddleware = async (req, res, next) => {
 
   if (!token || token === "null" || token === "undefined") {
     req.user = null;
-    return next();
+    return false;
   }
-
-  const cacheKey = `jwt:${token}`;
   try {
-    const cacheToken = await redisClient.get(cacheKey);
-    if (cacheToken) {
-      req.user = JSON.parse(cacheToken);
-      return next();
-    }
 
     jwt.verify(
       token,
       getKey,
       {
         audience: process.env.AUTH0_AUDIENCE,
-        issuer: `https://${process.env.AUTH0_DOMAIN}/`,
+        issuer: `https://${process.env.AUTH0_DOMAIN}`,
         algorithms: ["RS256"],
       },
       async (err, decoded) => {
@@ -65,11 +57,6 @@ const authMiddleware = async (req, res, next) => {
           return next();
         }
         req.user = decoded;
-        try {
-          await redisClient.set(cacheKey, JSON.stringify(decoded), "EX", 3600);
-        } catch (cacheError) {
-          console.error("Cache error:", cacheError);
-        }
         return next();
       }
     );
