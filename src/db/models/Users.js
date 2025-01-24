@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
+  auth0Id: {
+    type: String,
+    required: true,
+    unique: true
+  },
   name: {
     type: String,
     required: [true, 'Please provide your name'],
@@ -21,8 +26,8 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['farmer', 'buyer', 'admin'],
-    default: 'farmer'
+    enum: ['seller', 'buyer'],
+    required: [true, 'Please specify user role']
   },
   phone: {
     type: String,
@@ -33,6 +38,20 @@ const userSchema = new mongoose.Schema({
     city: String,
     state: String,
     pincode: String
+  },
+  // Seller specific fields
+  farmDetails: {
+    farmSize: Number,
+    primaryCrops: [String],
+    farmAddress: String,
+    required: function() { return this.role === 'seller'; }
+  },
+  // Buyer specific fields
+  businessDetails: {
+    companyName: String,
+    businessType: String,
+    gstNumber: String,
+    required: function() { return this.role === 'buyer'; }
   },
   isVerified: {
     type: Boolean,
