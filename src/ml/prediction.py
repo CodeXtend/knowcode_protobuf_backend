@@ -13,10 +13,106 @@ class AgriculturePredictor:
         self.model_waste = None
         self.label_encoders = {}
         self.valid_soil_conditions = ['sandy', 'clay', 'loamy']
-        self.valid_crops = ['rice', 'wheat', 'maize', 'cotton']
+        self.crops_cache_file = 'crops_database.json'
         self.locations_cache_file = 'india_locations.json'
+        self.crops_data = self._load_crops()
         self.locations = self._load_locations()
         self._initialize_data()
+
+    def _load_crops(self):
+        """Load or fetch crops database"""
+        if os.path.exists(self.crops_cache_file):
+            with open(self.crops_cache_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        else:
+            return self._fetch_and_cache_crops()
+
+    def _fetch_and_cache_crops(self):
+        """Create comprehensive Indian crops database"""
+        crops_data = {
+            # Cereals
+            "rice": {"yield_factor": 0.4, "waste_factor": 0.1, "price_per_ton": 20000},
+            "wheat": {"yield_factor": 0.35, "waste_factor": 0.08, "price_per_ton": 22000},
+            "maize": {"yield_factor": 0.45, "waste_factor": 0.12, "price_per_ton": 18000},
+            "sorghum": {"yield_factor": 0.3, "waste_factor": 0.1, "price_per_ton": 16000},
+            "pearl_millet": {"yield_factor": 0.25, "waste_factor": 0.1, "price_per_ton": 15000},
+            "finger_millet": {"yield_factor": 0.25, "waste_factor": 0.1, "price_per_ton": 15000},
+            
+            # Pulses
+            "chickpeas": {"yield_factor": 0.2, "waste_factor": 0.08, "price_per_ton": 45000},
+            "pigeon_peas": {"yield_factor": 0.2, "waste_factor": 0.08, "price_per_ton": 48000},
+            "lentils": {"yield_factor": 0.2, "waste_factor": 0.08, "price_per_ton": 50000},
+            "black_gram": {"yield_factor": 0.2, "waste_factor": 0.08, "price_per_ton": 46000},
+            "green_gram": {"yield_factor": 0.2, "waste_factor": 0.08, "price_per_ton": 47000},
+            
+            # Oilseeds
+            "groundnut": {"yield_factor": 0.3, "waste_factor": 0.1, "price_per_ton": 40000},
+            "rapeseed": {"yield_factor": 0.25, "waste_factor": 0.1, "price_per_ton": 38000},
+            "mustard": {"yield_factor": 0.25, "waste_factor": 0.1, "price_per_ton": 38000},
+            "soybean": {"yield_factor": 0.3, "waste_factor": 0.1, "price_per_ton": 36000},
+            "sunflower": {"yield_factor": 0.28, "waste_factor": 0.1, "price_per_ton": 35000},
+            "sesame": {"yield_factor": 0.2, "waste_factor": 0.1, "price_per_ton": 55000},
+            
+            # Commercial Crops
+            "sugarcane": {"yield_factor": 0.7, "waste_factor": 0.15, "price_per_ton": 3000},
+            "cotton": {"yield_factor": 0.25, "waste_factor": 0.15, "price_per_ton": 45000},
+            "jute": {"yield_factor": 0.3, "waste_factor": 0.15, "price_per_ton": 40000},
+            "tobacco": {"yield_factor": 0.3, "waste_factor": 0.2, "price_per_ton": 130000},
+            
+            # Plantation Crops
+            "tea": {"yield_factor": 0.4, "waste_factor": 0.1, "price_per_ton": 200000},
+            "coffee": {"yield_factor": 0.35, "waste_factor": 0.1, "price_per_ton": 180000},
+            "rubber": {"yield_factor": 0.4, "waste_factor": 0.1, "price_per_ton": 150000},
+            "coconut": {"yield_factor": 0.5, "waste_factor": 0.2, "price_per_ton": 25000},
+            "arecanut": {"yield_factor": 0.4, "waste_factor": 0.15, "price_per_ton": 250000},
+            
+            # Fruits
+            "mango": {"yield_factor": 0.5, "waste_factor": 0.3, "price_per_ton": 35000},
+            "banana": {"yield_factor": 0.6, "waste_factor": 0.25, "price_per_ton": 25000},
+            "apple": {"yield_factor": 0.5, "waste_factor": 0.2, "price_per_ton": 45000},
+            "grapes": {"yield_factor": 0.55, "waste_factor": 0.2, "price_per_ton": 50000},
+            "orange": {"yield_factor": 0.5, "waste_factor": 0.25, "price_per_ton": 30000},
+            "pineapple": {"yield_factor": 0.6, "waste_factor": 0.2, "price_per_ton": 28000},
+            "guava": {"yield_factor": 0.5, "waste_factor": 0.25, "price_per_ton": 25000},
+            "papaya": {"yield_factor": 0.6, "waste_factor": 0.3, "price_per_ton": 22000},
+            "litchi": {"yield_factor": 0.4, "waste_factor": 0.25, "price_per_ton": 60000},
+            "pomegranate": {"yield_factor": 0.45, "waste_factor": 0.2, "price_per_ton": 55000},
+            
+            # Vegetables
+            "potato": {"yield_factor": 0.6, "waste_factor": 0.2, "price_per_ton": 15000},
+            "tomato": {"yield_factor": 0.55, "waste_factor": 0.25, "price_per_ton": 18000},
+            "onion": {"yield_factor": 0.5, "waste_factor": 0.2, "price_per_ton": 20000},
+            "brinjal": {"yield_factor": 0.5, "waste_factor": 0.25, "price_per_ton": 16000},
+            "okra": {"yield_factor": 0.45, "waste_factor": 0.2, "price_per_ton": 25000},
+            "cabbage": {"yield_factor": 0.6, "waste_factor": 0.25, "price_per_ton": 12000},
+            "cauliflower": {"yield_factor": 0.55, "waste_factor": 0.25, "price_per_ton": 15000},
+            "carrot": {"yield_factor": 0.5, "waste_factor": 0.2, "price_per_ton": 18000},
+            "peas": {"yield_factor": 0.4, "waste_factor": 0.15, "price_per_ton": 30000},
+            "spinach": {"yield_factor": 0.45, "waste_factor": 0.2, "price_per_ton": 20000},
+            
+            # Spices
+            "chillies": {"yield_factor": 0.3, "waste_factor": 0.1, "price_per_ton": 80000},
+            "turmeric": {"yield_factor": 0.35, "waste_factor": 0.1, "price_per_ton": 70000},
+            "ginger": {"yield_factor": 0.4, "waste_factor": 0.15, "price_per_ton": 60000},
+            "garlic": {"yield_factor": 0.45, "waste_factor": 0.15, "price_per_ton": 40000},
+            "cardamom": {"yield_factor": 0.2, "waste_factor": 0.1, "price_per_ton": 700000},
+            "black_pepper": {"yield_factor": 0.25, "waste_factor": 0.1, "price_per_ton": 350000},
+            "coriander": {"yield_factor": 0.3, "waste_factor": 0.1, "price_per_ton": 45000},
+            "cumin": {"yield_factor": 0.25, "waste_factor": 0.1, "price_per_ton": 150000},
+            "fenugreek": {"yield_factor": 0.3, "waste_factor": 0.1, "price_per_ton": 40000},
+            
+            # Flowers
+            "rose": {"yield_factor": 0.4, "waste_factor": 0.3, "price_per_ton": 100000},
+            "marigold": {"yield_factor": 0.45, "waste_factor": 0.3, "price_per_ton": 40000},
+            "jasmine": {"yield_factor": 0.35, "waste_factor": 0.3, "price_per_ton": 150000},
+            "chrysanthemum": {"yield_factor": 0.4, "waste_factor": 0.3, "price_per_ton": 60000},
+            "gladiolus": {"yield_factor": 0.4, "waste_factor": 0.3, "price_per_ton": 80000}
+        }
+        
+        with open(self.crops_cache_file, 'w', encoding='utf-8') as f:
+            json.dump(crops_data, f)
+        
+        return crops_data
 
     def _load_locations(self):
         """Load or fetch Indian locations"""
@@ -51,6 +147,12 @@ class AgriculturePredictor:
         closest_match = process.extractOne(input_location, self.locations)
         return closest_match[0] if closest_match[1] >= 60 else None
 
+    def find_closest_crop(self, input_crop):
+        """Find closest matching crop using fuzzy matching"""
+        crops = list(self.crops_data.keys())
+        closest_match = process.extractOne(input_crop.lower(), crops)
+        return closest_match[0] if closest_match[1] >= 60 else None
+
     def _initialize_data(self):
         # Create sample training data
         n_samples = 1000
@@ -58,7 +160,7 @@ class AgriculturePredictor:
             'location': np.random.choice(self.locations, n_samples),
             'land_area': np.random.uniform(1, 2500, n_samples),  # Changed to acres (1 hectare ≈ 2.47 acres)
             'soil_condition': np.random.choice(self.valid_soil_conditions, n_samples),
-            'crop_type': np.random.choice(self.valid_crops, n_samples),
+            'crop_type': np.random.choice(list(self.crops_data.keys()), n_samples),
             'temperature': np.random.uniform(20, 40, n_samples),
             'rainfall': np.random.uniform(500, 2000, n_samples)
         })
@@ -96,33 +198,34 @@ class AgriculturePredictor:
         return processed_data
     
     def predict_crop(self, location, land_area, soil_condition, crop_type):
-        # Find closest matching location
+        # Find closest matching crop
+        matched_crop = self.find_closest_crop(crop_type)
+        if not matched_crop:
+            return {"error": f"Crop type '{crop_type}' not recognized"}
+        
         matched_location = self.find_closest_location(location)
         if not matched_location:
-            return {"error": f"Location '{location}' not found in database"}
-            
-        # Rest of the validation
+            return {"error": f"Location '{location}' not found"}
+
         if soil_condition not in self.valid_soil_conditions:
             return {"error": f"Invalid soil condition. Choose from: {', '.join(self.valid_soil_conditions)}"}
-        if crop_type not in self.valid_crops:
-            return {"error": f"Invalid crop type. Choose from: {', '.join(self.valid_crops)}"}
 
-        # Use matched location for prediction
-        input_data = pd.DataFrame({
-            'location': [matched_location],
-            'land_area': [land_area],
-            'soil_condition': [soil_condition],
-            'crop_type': [crop_type]
-        })
+        # Use crop-specific factors with fallback values
+        crop_data = self.crops_data[matched_crop]
+        base_yield = land_area * crop_data.get('yield_factor', 0.4)
+        base_waste = base_yield * crop_data.get('waste_factor', 0.1)
         
-        processed_input = self.preprocess_data(input_data)
-        predicted_yield = self.model_yield.predict(processed_input)[0]
-        predicted_waste = self.model_waste.predict(processed_input)[0]
-        
+        # Get price with fallback
+        price_per_ton = crop_data.get('price_per_ton', 20000)  # Default 20000 if not specified
+        estimated_profit = base_yield * price_per_ton
+
         return {
-            'predicted_yield': round(predicted_yield, 2),
-            'predicted_waste': round(predicted_waste, 2),
-            'estimated_profit': round(predicted_yield * 20000, 2)
+            'crop': matched_crop,
+            'location': matched_location,
+            'predicted_yield': round(base_yield, 2),
+            'predicted_waste': round(base_waste, 2),
+            'price_per_ton': price_per_ton,
+            'estimated_profit': round(estimated_profit, 2)
         }
 
 if __name__ == "__main__":
@@ -131,12 +234,12 @@ if __name__ == "__main__":
     print("\nAvailable options:")
     print("Location: Enter any Indian city/village name")
     print(f"Soil conditions: {', '.join(predictor.valid_soil_conditions)}")
-    print(f"Crop types: {', '.join(predictor.valid_crops)}\n")
+    print("Crop types: Enter any crop name (e.g., rice, wheat, potato, tomato, etc.)\n")
     
     location = input("Enter location: ")
     land_area = float(input("Enter land area (in acres): "))
     soil_condition = input("Enter soil condition (sandy/clay/loamy): ")
-    crop_type = input("Enter crop type (rice/wheat/maize/cotton): ")
+    crop_type = input("Enter crop type: ")
     
     result = predictor.predict_crop(location, land_area, soil_condition, crop_type)
     
@@ -144,6 +247,9 @@ if __name__ == "__main__":
         print(f"\nError: {result['error']}")
     else:
         print("\nPrediction Results:")
+        print(f"Crop: {result['crop']}")
+        print(f"Location: {result['location']}")
         print(f"Expected Yield: {result['predicted_yield']} tons")
         print(f"Expected Waste: {result['predicted_waste']} tons")
+        print(f"Price per ton: ₹{result['price_per_ton']}")
         print(f"Estimated Profit: ₹{result['estimated_profit']}")
