@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerAfterAuth0, getUserProfile, verifyUserExists } from '../controllers/userController.js';
+import { registerAfterAuth0, getUserProfile, verifyUserExists, getUserData } from '../controllers/userController.js';
 
 const router = express.Router();
 
@@ -9,5 +9,6 @@ router.post(
   registerAfterAuth0
 );
 router.get('/profile', getUserProfile);
+router.get('/data/:auth0Id', getUserData);
 
 export default router;

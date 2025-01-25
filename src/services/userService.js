@@ -58,6 +58,18 @@ export const verifyUser = async (auth0Id) => {
   }
 };
 
+export const getUserData = async (auth0Id) => {
+  try {
+    const user = await User.findOne({ auth0Id }).select('-__v');
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user;
+  } catch (error) {
+    throw new Error(`Error fetching user data: ${error.message}`);
+  }
+};
+
 // export const getUserByAuth0Id = async (auth0Id) => {
 //   try {
 //     const user = await User.findOne({ auth0Id });

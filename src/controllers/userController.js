@@ -135,3 +135,26 @@ export const deleteUserProfile = async (req, res) => {
   //   });
   // }
 };
+
+export const getUserData = async (req, res) => {
+  try {
+    const { auth0Id } = req.params;
+    if (!auth0Id) {
+      return res.status(400).json({
+        status: "error",
+        message: "Auth0 ID is required"
+      });
+    }
+
+    const userData = await userService.getUserData(auth0Id);
+    res.status(200).json({
+      status: "success",
+      data: userData
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: "error",
+      message: error.message
+    });
+  }
+};
