@@ -33,7 +33,7 @@ app.get("/health", (req, res) => {
 });
 
 // Add routes
-app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/users", userRoutes); 
 app.use("/api/v1/waste", wasteRoutes);
 app.use("/api/v1/dashboards", wasteRoutes);
 

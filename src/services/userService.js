@@ -1,11 +1,6 @@
 import User from "../db/models/Users.js";
 import { ManagementClient } from "auth0";
 
-const auth0Management = new ManagementClient({
-  domain: process.env.AUTH0_DOMAIN,
-  clientId: process.env.AUTH0_CLIENT_ID,
-  clientSecret: process.env.AUTH0_CLIENT_SECRET,
-});
 
 export const createUser = async (userData) => {
   // Validate required fields
@@ -26,16 +21,12 @@ export const createUser = async (userData) => {
   }
 
   try {
-    // Get user info from Auth0
-    const auth0User = await auth0Management.getUser({
-      id: userData.auth0Id.split("|")[1],
-    });
 
     // Create user in our database
     const user = await User.create({
       auth0Id: userData.auth0Id.split("|")[1],
-      email: auth0User.email,
-      name: userData.name || auth0User.name,
+      email: userData.email,
+      name: userData.name,
       role: userData.role,
       phone: userData.phone,
       location: userData.location,
