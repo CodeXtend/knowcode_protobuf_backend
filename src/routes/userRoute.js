@@ -7,7 +7,5 @@ router.post(
   userController.registerAfterAuth0
 );
 router.get('/profile', userController.getUserProfile);
-// router.patch('/profile', userController.updateUserProfile);
-// router.delete('/profile', userController.deleteUserProfile);
 
 export default router;

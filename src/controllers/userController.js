@@ -1,69 +1,39 @@
-import * as userService from '../services/userService.js';
+import * as userService from "../services/userService.js";
 
 export const registerAfterAuth0 = async (req, res) => {
   try {
     const auth0User = req.user;
     const user = await userService.createUser(req.body);
-    
+
     res.status(201).json({
-      status: 'success',
-      data: { user } 
+      status: "success",
+      data: { user },
     });
   } catch (error) {
     res.status(400).json({
-      status: 'error',
-      message: error.message
+      status: "error",
+      message: error.message,
     });
   }
 };
 
 export const getUserProfile = async (req, res) => {
-  // try {
-  //   const { user: auth0User } = req.auth;
-  //   const user = await userService.getUserByAuth0Id(auth0User.sub);
-    
-  //   res.status(200).json({
-  //     status: 'success',
-  //     data: { user }
-  //   });
-  // } catch (error) {
-  //   res.status(404).json({
-  //     status: 'error',
-  //     message: error.message
-  //   });
-  // }
+  try {
+    const { auth0Id } = req.body;
+    const user = await userService.getUserByAuth0Id(auth0Id.sub.split("|")[1]);
+
+    res.status(200).json({
+      status: "success",
+      data: { user },
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: "error",
+      message: error.message,
+    });
+  }
 };
 
-export const register = async (req, res) => {
-  // try {
-  //   const user = await userService.createUser(req.body);
-  //   res.status(201).json({
-  //     status: 'success',
-  //     data: { user }
-  //   });
-  // } catch (error) {
-  //   res.status(400).json({
-  //     status: 'error',
-  //     message: error.message
-  //   });
-  // }
-};
-
-export const login = async (req, res) => {
-  // try {
-  //   const { email, password } = req.body;
-  //   const { user, token } = await userService.loginUser(email, password);
-  //   res.status(200).json({
-  //     status: 'success',
-  //     data: { user, token }
-  //   });
-  // } catch (error) {
-  //   res.status(401).json({
-  //     status: 'error',
-  //     message: error.message
-  //   });
-  // }
-};
 
 export const buyerLogin = async (req, res) => {
   // try {
