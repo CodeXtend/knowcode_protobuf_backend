@@ -105,12 +105,20 @@ export const getEnvironmentalImpact = async (req, res) => {
     const impact = await wasteService.getEnvironmentalImpact();
     res.status(200).json({
       status: 'success',
-      data: { impact }
+      data: {
+        impact,
+        metadata: {
+          lastUpdated: new Date(),
+          dataQuality: 'estimated',
+          methodology: 'Based on IPCC guidelines for agricultural waste management',
+        }
+      }
     });
   } catch (error) {
     res.status(400).json({
       status: 'error',
-      message: error.message
+      message: error.message,
+      errorCode: 'IMPACT_CALCULATION_ERROR'
     });
   }
 };

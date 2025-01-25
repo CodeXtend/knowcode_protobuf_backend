@@ -1,5 +1,5 @@
 import Waste from "../db/models/Waste.js";
-import { calculateEnvironmentalImpact } from '../utils/environmentalImpact.js';
+import { calculateEnvironmentalImpact, getCarbonOffsetEquivalent } from '../utils/environmentalImpact.js';
 
 export const createWaste = async (wasteData) => {
   console.log(wasteData);
@@ -195,23 +195,40 @@ export const getEnvironmentalImpact = async () => {
     {
       $group: {
         _id: '$wasteType',
-        totalQuantity: { $sum: '$quantity' }
+        totalQuantity: { $sum: '$quantity' },
+        locationCount: {
+          $addToSet: '$location.district'
+        }
       }
     }
   ]);
 
-  const totalImpact = wasteData.reduce((acc, { _id, totalQuantity }) => {
+  let totalCarbonImpact = 0;
+  const impactByType = wasteData.map(({ _id, totalQuantity }) => {
     const impact = calculateEnvironmentalImpact(_id, totalQuantity);
+    totalCarbonImpact += impact.totalCarbonImpact;
     return {
-      co2Prevented: acc.co2Prevented + impact.co2Prevented,
-      waterSaved: acc.waterSaved + impact.waterSaved,
+      wasteType: _id,
+      quantity: totalQuantity,
+      impact
     };
-  }, { co2Prevented: 0, waterSaved: 0 });
+  });
+
+  const offsetEquivalent = getCarbonOffsetEquivalent(totalCarbonImpact);
 
   return {
-    ...totalImpact,
-    wasteByType: wasteData,
-    treesEquivalent: Math.floor(totalImpact.co2Prevented / 20), // 1 tree absorbs ~20kg CO2 per year
+    summary: {
+      totalWasteManaged: wasteData.reduce((acc, curr) => acc + curr.totalQuantity, 0),
+      totalCarbonImpact,
+      totalLocations: new Set(wasteData.flatMap(w => w.locationCount)).size,
+    },
+    impactByType,
+    offsetEquivalent,
+    carbonReductionProgress: {
+      current: totalCarbonImpact,
+      target: 100000, // Example: 100 tonnes CO2 target
+      percentageAchieved: (totalCarbonImpact / 100000) * 100
+    }
   };
 };
 
