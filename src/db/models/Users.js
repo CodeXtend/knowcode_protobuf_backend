@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['seller', 'buyer'],
+    enum: ['farmer', 'buyer'],
     required: [true, 'Please specify user role']
   },
   phone: {
@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema({
     state: String,
     pincode: String
   },
-  // Seller specific fields
+  // Farmer specific fields (renamed from seller)
   farmDetails: {
     type: {
       farmSize: Number,
@@ -41,9 +41,9 @@ const userSchema = new mongoose.Schema({
     },
     required: [
       function() { 
-        return this.role === 'seller';
+        return this.role === 'farmer';
       },
-      'Farm details are required for sellers'
+      'Farm details are required for farmers'
     ],
     default: undefined
   },

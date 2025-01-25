@@ -8,13 +8,13 @@ export const createUser = async (userData) => {
     throw new Error("Auth0 ID and role are required");
   }
   // Validate role
-  if (!["buyer", "seller"].includes(userData.role)) {
+  if (!["buyer", "farmer"].includes(userData.role)) {
     throw new Error("Invalid role specified");
   }
 
   // Validate role-specific required fields
-  if (userData.role === "seller" && !userData.farmDetails) {
-    throw new Error("Farm details are required for sellers");
+  if (userData.role === "farmer" && !userData.farmDetails) {
+    throw new Error("Farm details are required for farmers");
   }
   if (userData.role === "buyer" && !userData.businessDetails) {
     throw new Error("Business details are required for buyers");

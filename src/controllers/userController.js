@@ -74,10 +74,11 @@ export const buyerLogin = async (req, res) => {
   // }
 };
 
-export const sellerLogin = async (req, res) => {
+// Rename sellerLogin to farmerLogin
+export const farmerLogin = async (req, res) => {
   // try {
   //   const { email, password } = req.body;
-  //   const { user, token } = await userService.loginUser(email, password, 'seller');
+  //   const { user, token } = await userService.loginUser(email, password, 'farmer');
   //   res.status(200).json({
   //     status: 'success',
   //     data: { user, token }
