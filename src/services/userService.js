@@ -1,5 +1,4 @@
 import User from "../db/models/Users.js";
-import { ManagementClient } from "auth0";
 
 export const createUser = async (userData) => {
   // Validate required fields
@@ -33,12 +32,6 @@ export const createUser = async (userData) => {
       isVerified: false,
       active: true,
     });
-
-    // Update Auth0 user metadata with our database user ID
-    await auth0Management.updateUserMetadata(
-      { id: userData.auth0Id },
-      { app_user_id: user._id.toString() }
-    );
 
     return user;
   } catch (error) {
