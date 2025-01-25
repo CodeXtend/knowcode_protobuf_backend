@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
   auth0Id: {
@@ -17,12 +16,6 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Please provide your email'],
     unique: true,
     lowercase: true
-  },
-  password: {
-    type: String,
-    required: [true, 'Please provide a password'],
-    minlength: 8,
-    select: false
   },
   role: {
     type: String,
@@ -81,17 +74,17 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Hash password before saving
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
+// Add text indexes for user search
+userSchema.index({
+  name: 'text',
+  'location.city': 'text',
+  'location.state': 'text'
 });
 
-// Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
-};
+// Add regular indexes for common queries
+userSchema.index({ auth0Id: 1 });
+userSchema.index({ role: 1 });
+userSchema.index({ 'location.pincode': 1 });
 
 const User = mongoose.model('User', userSchema);
 

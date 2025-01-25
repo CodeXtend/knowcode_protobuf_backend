@@ -34,6 +34,29 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
+export const verifyUserExists = async (req, res) => {
+  try {
+    const { auth0Id } = req.body;
+    if (!auth0Id) {
+      return res.status(400).json({
+        status: "error",
+        message: "Auth0 ID is required"
+      });
+    }
+
+    const verificationResult = await userService.verifyUser(auth0Id);
+    
+    res.status(200).json({
+      status: "success",
+      data: verificationResult
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "error",
+      message: error.message
+    });
+  }
+};
 
 export const buyerLogin = async (req, res) => {
   // try {

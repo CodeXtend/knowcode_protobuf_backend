@@ -4,7 +4,7 @@ export const createWasteEntry = async (req, res) => {
   try {
     const wasteData = {
       ...req.body,
-      seller: req.auth.sub 
+      auth0Id: req.body.auth0Id.split("|")[1]
     };
     const waste = await wasteService.createWaste(wasteData);
     
@@ -20,20 +20,20 @@ export const createWasteEntry = async (req, res) => {
   }
 };
 
-// export const getWaste = async (req, res) => {
-//   try {
-//     const waste = await wasteService.getWasteById(req.params.id);
-//     res.status(200).json({
-//       status: 'success',
-//       data: { waste }
-//     });
-//   } catch (error) {
-//     res.status(404).json({
-//       status: 'error',
-//       message: error.message
-//     });
-//   }
-// };
+export const getWaste = async (req, res) => {
+  try {
+    const waste = await wasteService.getWasteById(req.params.id);
+    res.status(200).json({
+      status: 'success',
+      data: { waste }
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
 
 // export const updateWaste = async (req, res) => {
 //   try {
@@ -80,17 +80,17 @@ export const createWasteEntry = async (req, res) => {
 //   }
 // };
 
-// export const searchWaste = async (req, res) => {
-//   try {
-//     const waste = await wasteService.searchWaste(req.query);
-//     res.status(200).json({
-//       status: 'success',
-//       data: { waste }
-//     });
-//   } catch (error) {
-//     res.status(400).json({
-//       status: 'error',
-//       message: error.message
-//     });
-//   }
-// };
+export const searchWaste = async (req, res) => {
+  try {
+    const waste = await wasteService.searchWaste(req.query);
+    res.status(200).json({
+      status: 'success',
+      data: { waste }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};

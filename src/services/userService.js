@@ -57,6 +57,25 @@ export const createUser = async (userData) => {
   }
 };
 
+export const verifyUser = async (auth0Id) => {
+  try {
+    const user = await User.findOne({ auth0Id: auth0Id.split("|")[1] });
+    if (!user) {
+      return {
+        exists: false,
+        role: null
+      };
+    }
+    return {
+      exists: true,
+      role: user.role,
+      isVerified: user.isVerified
+    };
+  } catch (error) {
+    throw new Error(`Error verifying user: ${error.message}`);
+  }
+};
+
 // export const getUserByAuth0Id = async (auth0Id) => {
 //   try {
 //     const user = await User.findOne({ auth0Id });

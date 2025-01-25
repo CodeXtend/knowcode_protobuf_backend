@@ -3,19 +3,17 @@ import * as wasteController from "../controllers/wasteController.js";
 
 const router = express.Router();
 
-// // Public routes
-// router.get('/search', wasteController.searchWaste);
-// router.get('/:id', wasteController.getWaste);
+// Public routes
+router.get('/search', wasteController.searchWaste);
+router.get('/:id', wasteController.getWaste);
+router.post('/add', wasteController.createWasteEntry);
 
-// // Protected routes
-// router.use(checkJwt);
-
-// // Seller only routes - requires both authentication and seller role
-// router.use(checkRole('seller'));
-
-router.post("/add", wasteController.createWasteEntry);
-// router.get('/my-listings', wasteController.getMyWaste);
-// router.patch('/:id', wasteController.updateWaste);
-// router.delete('/:id', wasteController.deleteWaste);
+// Analytics routes
+router.get('/analytics/overview', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    data: { message: 'Analytics endpoint' }
+  });
+});
 
 export default router;
