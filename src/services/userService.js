@@ -24,7 +24,7 @@ export const createUser = async (userData) => {
 
     // Create user in our database
     const user = await User.create({
-      auth0Id: userData.auth0Id.split("|")[1],
+      auth0Id: userData.auth0Id,
       email: userData.email,
       name: userData.name,
       role: userData.role,
