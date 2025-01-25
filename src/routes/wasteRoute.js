@@ -11,6 +11,10 @@ router.get('/analytics/monthly', wasteController.getMonthlyAnalytics);
 router.get('/search', wasteController.searchWaste);
 router.post('/add', wasteController.createWasteEntry);
 
+// Add these routes before the :id route
+router.get('/impact', wasteController.getEnvironmentalImpact);
+router.get('/map', wasteController.getMapData);
+
 // Parameter route should be last
 router.get('/:id', wasteController.getWaste);
 

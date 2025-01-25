@@ -99,3 +99,34 @@ export const searchWaste = async (req, res) => {
     });
   }
 };
+
+export const getEnvironmentalImpact = async (req, res) => {
+  try {
+    const impact = await wasteService.getEnvironmentalImpact();
+    res.status(200).json({
+      status: 'success',
+      data: { impact }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+export const getMapData = async (req, res) => {
+  try {
+    const bounds = req.query.bounds ? JSON.parse(req.query.bounds) : null;
+    const mapData = await wasteService.getMapData(bounds);
+    res.status(200).json({
+      status: 'success',
+      data: { mapData }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};

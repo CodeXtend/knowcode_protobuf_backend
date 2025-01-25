@@ -1,6 +1,8 @@
 import Waste from "../db/models/Waste.js";
+import { calculateEnvironmentalImpact } from '../utils/environmentalImpact.js';
 
 export const createWaste = async (wasteData) => {
+  console.log(wasteData);
   const waste = await Waste.create({
     ...wasteData,
     status: "available",
@@ -186,4 +188,48 @@ export const getMonthlyAnalytics = async (year = new Date().getFullYear()) => {
   });
 
   return filledMonths;
+};
+
+export const getEnvironmentalImpact = async () => {
+  const wasteData = await Waste.aggregate([
+    {
+      $group: {
+        _id: '$wasteType',
+        totalQuantity: { $sum: '$quantity' }
+      }
+    }
+  ]);
+
+  const totalImpact = wasteData.reduce((acc, { _id, totalQuantity }) => {
+    const impact = calculateEnvironmentalImpact(_id, totalQuantity);
+    return {
+      co2Prevented: acc.co2Prevented + impact.co2Prevented,
+      waterSaved: acc.waterSaved + impact.waterSaved,
+    };
+  }, { co2Prevented: 0, waterSaved: 0 });
+
+  return {
+    ...totalImpact,
+    wasteByType: wasteData,
+    treesEquivalent: Math.floor(totalImpact.co2Prevented / 20), // 1 tree absorbs ~20kg CO2 per year
+  };
+};
+
+export const getMapData = async (bounds) => {
+  const query = {};
+  
+  if (bounds) {
+    query['location.geoLocation'] = {
+      $geoWithin: {
+        $box: [
+          [bounds.sw.lng, bounds.sw.lat],
+          [bounds.ne.lng, bounds.ne.lat]
+        ]
+      }
+    };
+  }
+
+  return await Waste.find(query)
+    .select('location quantity wasteType status')
+    .lean();
 };

@@ -41,6 +41,7 @@ export const createUser = async (userData) => {
 
 export const verifyUser = async (auth0Id) => {
   try {
+    console.log(auth0Id);
     const user = await User.findOne({ auth0Id: auth0Id });
     if (!user) {
       return {
