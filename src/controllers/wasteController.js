@@ -4,7 +4,7 @@ export const createWasteEntry = async (req, res) => {
   try {
     const wasteData = {
       ...req.body,
-      auth0Id: req.body.auth0Id.split("|")[1]
+      auth0Id: req.body.auth0Id
     };
     const waste = await wasteService.createWaste(wasteData);
     

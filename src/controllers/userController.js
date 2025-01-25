@@ -20,7 +20,7 @@ export const registerAfterAuth0 = async (req, res) => {
 export const getUserProfile = async (req, res) => {
   try {
     const { auth0Id } = req.body;
-    const user = await userService.getUserByAuth0Id(auth0Id.sub.split("|")[1]);
+    const user = await userService.getUserByAuth0Id(auth0Id.sub);
 
     res.status(200).json({
       status: "success",
