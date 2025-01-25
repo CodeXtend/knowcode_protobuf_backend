@@ -3,11 +3,11 @@ import * as userService from '../services/userService.js';
 export const registerAfterAuth0 = async (req, res) => {
   try {
     const auth0User = req.user;
-    const user = await userService.createUser(req.body, auth0User.sub);
+    const user = await userService.createUser(req.body);
     
     res.status(201).json({
       status: 'success',
-      data: { user }
+      data: { user } 
     });
   } catch (error) {
     res.status(400).json({

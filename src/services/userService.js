@@ -1,5 +1,5 @@
-import User from '../db/models/Users.js';
-import { ManagementClient } from 'auth0';
+import User from "../db/models/Users.js";
+import { ManagementClient } from "auth0";
 
 const auth0Management = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN,
@@ -7,27 +7,33 @@ const auth0Management = new ManagementClient({
   clientSecret: process.env.AUTH0_CLIENT_SECRET,
 });
 
-export const createUser = async (userData, auth0UserId) => {
+export const createUser = async (userData) => {
+  // Validate required fields
+  if (!userData.auth0Id || !userData.role) {
+    throw new Error("Auth0 ID and role are required");
+  }
   // Validate role
-  if (!['buyer', 'seller'].includes(userData.role)) {
-    throw new Error('Invalid role specified');
+  if (!["buyer", "seller"].includes(userData.role)) {
+    throw new Error("Invalid role specified");
   }
-  
+
   // Validate role-specific required fields
-  if (userData.role === 'seller' && !userData.farmDetails) {
-    throw new Error('Farm details are required for sellers');
+  if (userData.role === "seller" && !userData.farmDetails) {
+    throw new Error("Farm details are required for sellers");
   }
-  if (userData.role === 'buyer' && !userData.businessDetails) {
-    throw new Error('Business details are required for buyers');
+  if (userData.role === "buyer" && !userData.businessDetails) {
+    throw new Error("Business details are required for buyers");
   }
 
   try {
     // Get user info from Auth0
-    const auth0User = await auth0Management.getUser({ id: auth0UserId });
-    
+    const auth0User = await auth0Management.getUser({
+      id: userData.auth0Id.split("|")[1],
+    });
+
     // Create user in our database
     const user = await User.create({
-      auth0Id: auth0UserId,
+      auth0Id: userData.auth0Id.split("|")[1],
       email: auth0User.email,
       name: userData.name || auth0User.name,
       role: userData.role,
@@ -36,12 +42,12 @@ export const createUser = async (userData, auth0UserId) => {
       farmDetails: userData.farmDetails,
       businessDetails: userData.businessDetails,
       isVerified: false,
-      active: true
+      active: true,
     });
 
     // Update Auth0 user metadata with our database user ID
     await auth0Management.updateUserMetadata(
-      { id: auth0UserId },
+      { id: userData.auth0Id.split("|")[1] },
       { app_user_id: user._id.toString() }
     );
 
