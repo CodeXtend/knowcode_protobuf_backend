@@ -1,9 +1,8 @@
 import mongoose from 'mongoose';
 
 const wasteSchema = new mongoose.Schema({
-  seller: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+  auth0Id : {
+    type: String,
     required: true
   },
   cropType: {
@@ -33,18 +32,13 @@ const wasteSchema = new mongoose.Schema({
     required: [true, 'Please specify availability date']
   },
   location: {
-    type: {
-      type: String,
-      default: 'Point'
-    },
-    coordinates: {
-      type: [Number],
-      required: [true, 'Please specify location coordinates']
-    },
     address: String,
     district: String,
     state: String,
-    pincode: String
+    pincode: {
+      type: String,
+      required: [true, 'Please specify the pincode']
+    }
   },
   images: [String],
   status: {
@@ -57,8 +51,20 @@ const wasteSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Add geospatial index for location-based queries
-wasteSchema.index({ location: '2dsphere' });
+// Add compound text index for searching
+wasteSchema.index({
+  cropType: 'text',
+  description: 'text',
+  'location.district': 'text',
+  'location.state': 'text',
+  wasteType: 'text'
+});
+
+// Add regular indexes for common query fields
+wasteSchema.index({ status: 1 });
+wasteSchema.index({ 'location.pincode': 1 });
+wasteSchema.index({ availableFrom: 1 });
+wasteSchema.index({ auth0Id: 1 });
 
 const Waste = mongoose.model('Waste', wasteSchema);
 

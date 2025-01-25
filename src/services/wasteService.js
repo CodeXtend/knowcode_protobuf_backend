@@ -1,8 +1,7 @@
-
 import Waste from '../db/models/Waste.js';
 
 export const createWaste = async (wasteData) => {
-  const waste = await Waste.create(wasteData);
+  const waste = await Waste.create(wasteData); // store auth0Id, cropType, wasteType, quantity, unit, price, availableFrom, location, images, status, description
   return waste;
 };
 
@@ -25,24 +24,33 @@ export const createWaste = async (wasteData) => {
 //   return await Waste.find({ seller: sellerId });
 // };
 
-// export const searchWaste = async (filters) => {
-//   const query = {};
+export const searchWaste = async (filters) => {
+  const query = {};
   
-//   if (filters.cropType) query.cropType = filters.cropType;
-//   if (filters.wasteType) query.wasteType = filters.wasteType;
-//   if (filters.status) query.status = filters.status;
+  // Text search
+  if (filters.searchText) {
+    query.$text = { $search: filters.searchText };
+  }
   
-//   if (filters.location) {
-//     query.location = {
-//       $near: {
-//         $geometry: {
-//           type: 'Point',
-//           coordinates: [filters.location.longitude, filters.location.latitude]
-//         },
-//         $maxDistance: filters.radius || 10000 // Default 10km radius
-//       }
-//     };
-//   }
+  // Direct matches
+  if (filters.cropType) query.cropType = filters.cropType;
+  if (filters.wasteType) query.wasteType = filters.wasteType;
+  if (filters.status) query.status = filters.status;
   
-//   return await Waste.find(query).populate('seller', 'name email phone');
-// };
+  // Location based search using pincode
+  if (filters.pincode) {
+    query['location.pincode'] = filters.pincode;
+  }
+  
+  // State and district filters
+  if (filters.state) {
+    query['location.state'] = filters.state;
+  }
+  if (filters.district) {
+    query['location.district'] = filters.district;
+  }
+
+  return await Waste.find(query)
+    .sort(filters.searchText ? { score: { $meta: 'textScore' } } : { createdAt: -1 })
+    .populate('seller', 'name email phone');
+};
