@@ -35,35 +35,40 @@ export const getWaste = async (req, res) => {
   }
 };
 
-// export const updateWaste = async (req, res) => {
-//   try {
-//     const waste = await wasteService.updateWaste(req.params.id, req.body);
-//     res.status(200).json({
-//       status: 'success',
-//       data: { waste }
-//     });
-//   } catch (error) {
-//     res.status(400).json({
-//       status: 'error',
-//       message: error.message
-//     });
-//   }
-// };
+export const getWasteStats = async (req, res) => {
+  try {
+    const stats = await wasteService.getWasteStats();
+    res.status(200).json({
+      status: 'success',
+      data: { stats }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
 
-// export const deleteWaste = async (req, res) => {
-//   try {
-//     await wasteService.deleteWaste(req.params.id);
-//     res.status(204).json({
-//       status: 'success',
-//       data: null
-//     });
-//   } catch (error) {
-//     res.status(400).json({
-//       status: 'error',
-//       message: error.message
-//     });
-//   }
-// };
+export const getMonthlyAnalytics = async (req, res) => {
+  try {
+    const year = req.query.year ? parseInt(req.query.year) : new Date().getFullYear();
+    const monthlyData = await wasteService.getMonthlyAnalytics(year);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        year,
+        monthlyData
+      }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
 
 // export const getMyWaste = async (req, res) => {
 //   try {

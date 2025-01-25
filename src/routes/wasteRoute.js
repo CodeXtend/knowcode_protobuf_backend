@@ -9,11 +9,7 @@ router.get('/:id', wasteController.getWaste);
 router.post('/add', wasteController.createWasteEntry);
 
 // Analytics routes
-router.get('/analytics/overview', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    data: { message: 'Analytics endpoint' }
-  });
-});
+router.get('/stats', wasteController.getWasteStats);
+router.get('/analytics/monthly', wasteController.getMonthlyAnalytics);
 
 export default router;
