@@ -75,6 +75,9 @@ export const getWasteStats = async () => {
               _id: null,
               totalQuantity: { $sum: "$quantity" },
               totalRevenue: {
+                $match: {
+                  status: 'sold'
+                },
                 $sum: { $multiply: ["$quantity", "$price"] },
               },
               wasteByType: {
