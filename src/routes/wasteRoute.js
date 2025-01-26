@@ -6,6 +6,7 @@ const router = express.Router();
 // Analytics and stats routes (place these BEFORE the :id route)
 router.get('/stats', wasteController.getWasteStats);
 router.get('/analytics/monthly', wasteController.getMonthlyAnalytics);
+router.get('/analytics/locations', wasteController.getLocationStats);
 
 // Public routes
 router.get('/search', wasteController.searchWaste);

@@ -153,3 +153,31 @@ export const getAllWaste = async (req, res) => {
     });
   }
 };
+
+export const getLocationStats = async (req, res) => {
+  try {
+    const { groupBy = 'district', limit = 10 } = req.query;
+    const stats = await wasteService.getLocationStats(groupBy, parseInt(limit));
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        stats,
+        visualization: {
+          type: 'pie',
+          recommended: {
+            title: `Waste Distribution by ${groupBy.charAt(0).toUpperCase() + groupBy.slice(1)}`,
+            labels: stats.locations.map(loc => loc.location),
+            values: stats.locations.map(loc => parseFloat(loc.percentage)),
+          }
+        }
+      }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message,
+      errorCode: 'LOCATION_STATS_ERROR'
+    });
+  }
+};

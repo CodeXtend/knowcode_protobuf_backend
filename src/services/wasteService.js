@@ -264,3 +264,76 @@ export const getMapData = async (bounds) => {
 export const getAllWaste = async () => {
   return await Waste.find();
 };
+
+export const getLocationStats = async (groupBy = 'district', limit = 10) => {
+  const validGroupings = ['district', 'state', 'pincode'];
+  if (!validGroupings.includes(groupBy)) {
+    throw new Error('Invalid grouping parameter. Use district, state, or pincode');
+  }
+
+  const locationField = `location.${groupBy}`;
+  
+  const stats = await Waste.aggregate([
+    {
+      $group: {
+        _id: `$${locationField}`,
+        totalWaste: { $sum: '$quantity' },
+        wasteTypes: {
+          $push: {
+            type: '$wasteType',
+            quantity: '$quantity'
+          }
+        },
+        listings: { $sum: 1 },
+        averagePrice: { $avg: '$price' }
+      }
+    },
+    {
+      $project: {
+        location: '$_id',
+        totalWaste: 1,
+        listings: 1,
+        averagePrice: { $round: ['$averagePrice', 2] },
+        wasteBreakdown: {
+          $reduce: {
+            input: '$wasteTypes',
+            initialValue: {},
+            in: {
+              $mergeObjects: [
+                '$$value',
+                {
+                  $arrayToObject: [[
+                    {
+                      k: '$$this.type',
+                      v: { $sum: ['$$value.quantity', '$$this.quantity'] }
+                    }
+                  ]]
+                }
+              ]
+            }
+          }
+        },
+        _id: 0
+      }
+    },
+    { $sort: { totalWaste: -1 } },
+    { $limit: limit }
+  ]);
+
+  // Calculate percentages of total
+  const totalAllWaste = stats.reduce((sum, loc) => sum + loc.totalWaste, 0);
+  
+  return {
+    groupBy,
+    locations: stats.map(loc => ({
+      ...loc,
+      percentage: ((loc.totalWaste / totalAllWaste) * 100).toFixed(2)
+    })),
+    summary: {
+      totalLocations: stats.length,
+      totalWaste: totalAllWaste,
+      topLocation: stats[0]?.location || null,
+      topLocationPercentage: stats[0] ? ((stats[0].totalWaste / totalAllWaste) * 100).toFixed(2) : 0
+    }
+  };
+};
