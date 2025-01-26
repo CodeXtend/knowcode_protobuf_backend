@@ -1,4 +1,5 @@
 import Waste from "../db/models/Waste.js";
+import User from "../db/models/Users.js";  // Add User model import
 import {
   calculateEnvironmentalImpact,
   getCarbonOffsetEquivalent,
@@ -442,6 +443,18 @@ export const getDetailedWasteInfo = async (wasteId) => {
     throw new Error('Waste listing not found');
   }
 
+  // Get farmer details from User model using auth0Id
+  const farmer = await User.findOne({ auth0Id: waste.auth0Id })
+    .select('name email phone')
+    .lean();
+
+  // Get farmer contact info
+  const farmerContact = {
+    name: farmer?.name || 'Not Available',
+    phone: farmer?.phone || 'Not Available',
+    email: farmer?.email || 'Not Available'
+  };
+
   // Calculate environmental impact for this specific waste
   const impact = calculateEnvironmentalImpact(waste.wasteType, waste.quantity);
   const offsetEquivalent = getCarbonOffsetEquivalent(impact.totalCarbonImpact);
@@ -476,7 +489,11 @@ export const getDetailedWasteInfo = async (wasteId) => {
   ]);
 
   return {
-    details: waste,
+    details: {
+      ...waste,
+      seller: undefined  // Remove seller field if it exists
+    },
+    farmerContact,
     environmentalImpact: {
       ...impact,
       offsetEquivalent
