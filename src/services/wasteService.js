@@ -20,17 +20,10 @@ export const getWasteById = async (id) => {
 export const searchWaste = async (filters) => {
   const query = {};
 
-  // Handle text search for multiple fields
-  if (filters.query) {
-    query.$or = [
-      { cropType: new RegExp(filters.query, 'i') },
-      { wasteType: new RegExp(filters.query, 'i') },
-      { 'location.district': new RegExp(filters.query, 'i') },
-      { 'location.state': new RegExp(filters.query, 'i') }
-    ];
+  if (filters.searchText) {
+    query.$text = { $search: filters.searchText };
   }
 
-  // Add other filters
   if (filters.cropType) query.cropType = filters.cropType;
   if (filters.wasteType) query.wasteType = filters.wasteType;
   if (filters.status) query.status = filters.status;
@@ -47,29 +40,15 @@ export const searchWaste = async (filters) => {
     }
   }
 
-  const sortOptions = { createdAt: -1 };
+  const sortOptions = filters.searchText
+    ? { score: { $meta: "textScore" } }
+    : { createdAt: -1 };
 
-  try {
-    const wastes = await Waste.find(query)
-      .sort(sortOptions)
-      .limit(filters.limit || 10)
-      .skip(filters.skip || 0)
-      .select('-__v')
-      .lean();
-
-    // Get auth0Ids to fetch user details if needed
-    const uniqueAuth0Ids = [...new Set(wastes.map(w => w.auth0Id))];
-
-    return {
-      wastes,
-      meta: {
-        total: await Waste.countDocuments(query),
-        auth0Ids: uniqueAuth0Ids
-      }
-    };
-  } catch (error) {
-    throw new Error(`Search failed: ${error.message}`);
-  }
+  return await Waste.find(query)
+    .sort(sortOptions)
+    .limit(filters.limit || 10)
+    .skip(filters.skip || 0)
+    .populate("seller", "name email phone");
 };
 
 export const getWasteStats = async () => {

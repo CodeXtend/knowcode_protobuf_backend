@@ -275,8 +275,7 @@ export const getDetailedWaste = async (req, res) => {
 export const updateWasteStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
-    const auth0Id = req.auth0Id; // Assuming this comes from auth middleware
+    const { status, auth0Id } = req.body;
 
     if (!status) {
       throw new Error('Status is required');
