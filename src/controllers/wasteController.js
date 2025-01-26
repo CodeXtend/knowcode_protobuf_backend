@@ -181,3 +181,39 @@ export const getLocationStats = async (req, res) => {
     });
   }
 };
+
+export const getFarmerWaste = async (req, res) => {
+  try {
+    const auth0Id = req.params.farmerId || req.auth0Id; // Use provided ID or authenticated user's ID
+    const farmerWaste = await wasteService.getFarmerWasteDetails(auth0Id);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        farmerWaste,
+        visualizations: {
+          monthly: {
+            type: 'line',
+            data: farmerWaste.stats.monthly.map(stat => ({
+              x: `${stat._id.year}-${stat._id.month}`,
+              y: stat.quantity
+            }))
+          },
+          wasteTypes: {
+            type: 'pie',
+            data: farmerWaste.stats.byWasteType.map(type => ({
+              label: type._id,
+              value: type.totalQuantity
+            }))
+          }
+        }
+      }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message,
+      errorCode: 'FARMER_WASTE_ERROR'
+    });
+  }
+};

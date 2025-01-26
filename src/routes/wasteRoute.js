@@ -15,6 +15,10 @@ router.get('/all', wasteController.getAllWaste);
 router.get('/impact', wasteController.getEnvironmentalImpact);
 router.get('/map', wasteController.getMapData);
 
+// Farmer specific routes
+router.get('/farmer/:farmerId', wasteController.getFarmerWaste);
+router.get('/my-waste', wasteController.getFarmerWaste); // For authenticated farmer's own waste
+
 // Parameter route should be last
 router.get('/:id', wasteController.getWaste);
 

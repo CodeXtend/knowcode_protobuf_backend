@@ -337,3 +337,94 @@ export const getLocationStats = async (groupBy = 'district', limit = 10) => {
     }
   };
 };
+
+export const getFarmerWasteDetails = async (auth0Id) => {
+  const [wasteDetails, aggregatedStats] = await Promise.all([
+    // Get all waste listings
+    Waste.find({ auth0Id })
+      .sort({ createdAt: -1 })
+      .lean(),
+    
+    // Get aggregated stats
+    Waste.aggregate([
+      { $match: { auth0Id } },
+      {
+        $facet: {
+          'overallStats': [
+            {
+              $group: {
+                _id: null,
+                totalListings: { $sum: 1 },
+                totalQuantity: { $sum: '$quantity' },
+                totalRevenue: { $sum: { $multiply: ['$quantity', '$price'] } },
+                averagePrice: { $avg: '$price' }
+              }
+            }
+          ],
+          'statusBreakdown': [
+            {
+              $group: {
+                _id: '$status',
+                count: { $sum: 1 },
+                totalQuantity: { $sum: '$quantity' }
+              }
+            }
+          ],
+          'wasteTypeStats': [
+            {
+              $group: {
+                _id: '$wasteType',
+                count: { $sum: 1 },
+                totalQuantity: { $sum: '$quantity' },
+                averagePrice: { $avg: '$price' }
+              }
+            }
+          ],
+          'monthlyStats': [
+            {
+              $group: {
+                _id: {
+                  month: { $month: '$createdAt' },
+                  year: { $year: '$createdAt' }
+                },
+                quantity: { $sum: '$quantity' },
+                revenue: { $sum: { $multiply: ['$quantity', '$price'] } }
+              }
+            },
+            { $sort: { '_id.year': -1, '_id.month': -1 } },
+            { $limit: 12 }
+          ]
+        }
+      }
+    ])
+  ]);
+
+  // Calculate environmental impact
+  const totalImpact = wasteDetails.reduce((acc, waste) => {
+    const impact = calculateEnvironmentalImpact(waste.wasteType, waste.quantity);
+    return {
+      co2Prevented: acc.co2Prevented + impact.co2Prevented,
+      waterSaved: acc.waterSaved + impact.waterSaved,
+      carbonSequestered: acc.carbonSequestered + impact.carbonSequestered
+    };
+  }, { co2Prevented: 0, waterSaved: 0, carbonSequestered: 0 });
+
+  return {
+    recentListings: wasteDetails.slice(0, 5),
+    stats: {
+      overall: aggregatedStats[0].overallStats[0] || {
+        totalListings: 0,
+        totalQuantity: 0,
+        totalRevenue: 0,
+        averagePrice: 0
+      },
+      byStatus: aggregatedStats[0].statusBreakdown,
+      byWasteType: aggregatedStats[0].wasteTypeStats,
+      monthly: aggregatedStats[0].monthlyStats
+    },
+    environmentalImpact: {
+      ...totalImpact,
+      offsetEquivalent: getCarbonOffsetEquivalent(totalImpact.co2Prevented)
+    }
+  };
+};

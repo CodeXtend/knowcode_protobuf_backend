@@ -66,6 +66,9 @@ wasteSchema.index({ 'location.pincode': 1 });
 wasteSchema.index({ availableFrom: 1 });
 wasteSchema.index({ auth0Id: 1 });
 
+// Add compound index for farmer queries
+wasteSchema.index({ auth0Id: 1, createdAt: -1 });
+
 const Waste = mongoose.model('Waste', wasteSchema);
 
 export default Waste;
