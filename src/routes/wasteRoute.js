@@ -19,6 +19,9 @@ router.get('/map', wasteController.getMapData);
 router.get('/farmer/:farmerId', wasteController.getFarmerWaste);
 router.get('/my-waste', wasteController.getFarmerWaste); // For authenticated farmer's own waste
 
+// Detail routes
+router.get('/detail/:id', wasteController.getDetailedWaste);
+
 // Parameter route should be last
 router.get('/:id', wasteController.getWaste);
 

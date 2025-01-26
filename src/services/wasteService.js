@@ -428,3 +428,64 @@ export const getFarmerWasteDetails = async (auth0Id) => {
     }
   };
 };
+
+export const getDetailedWasteInfo = async (wasteId) => {
+  const waste = await Waste.findById(wasteId).lean();
+  
+  if (!waste) {
+    throw new Error('Waste listing not found');
+  }
+
+  // Calculate environmental impact for this specific waste
+  const impact = calculateEnvironmentalImpact(waste.wasteType, waste.quantity);
+  const offsetEquivalent = getCarbonOffsetEquivalent(impact.totalCarbonImpact);
+
+  // Get similar listings in the same area
+  const similarListings = await Waste.find({
+    _id: { $ne: wasteId },
+    wasteType: waste.wasteType,
+    'location.district': waste.location.district,
+    status: 'available'
+  })
+  .select('quantity price wasteType availableFrom')
+  .limit(3)
+  .lean();
+
+  // Calculate average market price in the area
+  const marketStats = await Waste.aggregate([
+    {
+      $match: {
+        wasteType: waste.wasteType,
+        'location.district': waste.location.district,
+        status: 'available'
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        avgPrice: { $avg: '$price' },
+        totalAvailable: { $sum: '$quantity' }
+      }
+    }
+  ]);
+
+  return {
+    details: waste,
+    environmentalImpact: {
+      ...impact,
+      offsetEquivalent
+    },
+    marketContext: {
+      averagePrice: marketStats[0]?.avgPrice || waste.price,
+      totalAvailableInArea: marketStats[0]?.totalAvailable || 0,
+      priceComparisonToMarket: marketStats[0]?.avgPrice 
+        ? ((waste.price - marketStats[0].avgPrice) / marketStats[0].avgPrice * 100).toFixed(2)
+        : 0
+    },
+    similarListings,
+    metadata: {
+      lastUpdated: new Date(),
+      availabilityStatus: waste.availableFrom > new Date() ? 'upcoming' : 'current'
+    }
+  };
+};

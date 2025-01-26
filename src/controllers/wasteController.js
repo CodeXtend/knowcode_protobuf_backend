@@ -217,3 +217,41 @@ export const getFarmerWaste = async (req, res) => {
     });
   }
 };
+
+export const getDetailedWaste = async (req, res) => {
+  try {
+    const wasteInfo = await wasteService.getDetailedWasteInfo(req.params.id);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        wasteInfo,
+        visualizations: {
+          priceComparison: {
+            type: 'bar',
+            data: {
+              labels: ['Listed Price', 'Market Average'],
+              values: [
+                wasteInfo.details.price,
+                wasteInfo.marketContext.averagePrice
+              ]
+            }
+          },
+          environmentalImpact: {
+            type: 'metric',
+            data: {
+              co2Prevented: wasteInfo.environmentalImpact.co2Prevented,
+              treesEquivalent: wasteInfo.environmentalImpact.offsetEquivalent.treesPerYear
+            }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'error',
+      message: error.message,
+      errorCode: 'WASTE_DETAIL_ERROR'
+    });
+  }
+};
