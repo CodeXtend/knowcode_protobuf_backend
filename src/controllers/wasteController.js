@@ -138,3 +138,18 @@ export const getMapData = async (req, res) => {
     });
   }
 };
+
+export const getAllWaste = async (req, res) => {
+  try {
+    const waste = await wasteService.getAllWaste();
+    res.status(200).json({
+      status: 'success',
+      data: { waste }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};

@@ -1,5 +1,8 @@
 import Waste from "../db/models/Waste.js";
-import { calculateEnvironmentalImpact, getCarbonOffsetEquivalent } from '../utils/environmentalImpact.js';
+import {
+  calculateEnvironmentalImpact,
+  getCarbonOffsetEquivalent,
+} from "../utils/environmentalImpact.js";
 
 export const createWaste = async (wasteData) => {
   console.log(wasteData);
@@ -52,30 +55,30 @@ export const getWasteStats = async () => {
   const stats = await Waste.aggregate([
     {
       $facet: {
-        'statusStats': [
+        statusStats: [
           {
             $group: {
-              _id: '$status',
-              count: { $sum: 1 }
-            }
-          }
+              _id: "$status",
+              count: { $sum: 1 },
+            },
+          },
         ],
-        'totalWaste': [
+        totalWaste: [
           {
             $group: {
               _id: null,
-              totalQuantity: { $sum: '$quantity' },
+              totalQuantity: { $sum: "$quantity" },
               totalRevenue: {
-                $sum: { $multiply: ['$quantity', '$price'] }
+                $sum: { $multiply: ["$quantity", "$price"] },
               },
               wasteByType: {
                 $push: {
-                  type: '$wasteType',
-                  quantity: '$quantity',
-                  unit: '$unit'
-                }
-              }
-            }
+                  type: "$wasteType",
+                  quantity: "$quantity",
+                  unit: "$unit",
+                },
+              },
+            },
           },
           {
             $project: {
@@ -84,31 +87,33 @@ export const getWasteStats = async () => {
               totalRevenue: 1,
               wasteByType: {
                 $reduce: {
-                  input: '$wasteByType',
+                  input: "$wasteByType",
                   initialValue: {},
                   in: {
                     $mergeObjects: [
-                      '$$value',
+                      "$$value",
                       {
-                        $arrayToObject: [[
-                          { 
-                            k: '$$this.type', 
-                            v: { 
-                              quantity: '$$this.quantity', 
-                              unit: '$$this.unit' 
-                            } 
-                          }
-                        ]]
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        ]
-      }
-    }
+                        $arrayToObject: [
+                          [
+                            {
+                              k: "$$this.type",
+                              v: {
+                                quantity: "$$this.quantity",
+                                unit: "$$this.unit",
+                              },
+                            },
+                          ],
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+    },
   ]);
 
   // Transform the results into a more user-friendly format
@@ -119,7 +124,7 @@ export const getWasteStats = async () => {
     }, {}),
     totalWaste: stats[0].totalWaste[0]?.totalQuantity || 0,
     totalRevenue: stats[0].totalWaste[0]?.totalRevenue || 0,
-    wasteByType: stats[0].totalWaste[0]?.wasteByType || {}
+    wasteByType: stats[0].totalWaste[0]?.wasteByType || {},
   };
 
   return formattedStats;
@@ -131,20 +136,20 @@ export const getMonthlyAnalytics = async (year = new Date().getFullYear()) => {
       $match: {
         createdAt: {
           $gte: new Date(year, 0, 1),
-          $lte: new Date(year, 11, 31)
-        }
-      }
+          $lte: new Date(year, 11, 31),
+        },
+      },
     },
     {
       $group: {
         _id: {
           month: { $month: "$createdAt" },
-          wasteType: "$wasteType"
+          wasteType: "$wasteType",
         },
         totalQuantity: { $sum: "$quantity" },
         totalRevenue: { $sum: { $multiply: ["$quantity", "$price"] } },
-        avgPrice: { $avg: "$price" }
-      }
+        avgPrice: { $avg: "$price" },
+      },
     },
     {
       $group: {
@@ -154,15 +159,15 @@ export const getMonthlyAnalytics = async (year = new Date().getFullYear()) => {
             type: "$_id.wasteType",
             quantity: "$totalQuantity",
             revenue: "$totalRevenue",
-            avgPrice: "$avgPrice"
-          }
+            avgPrice: "$avgPrice",
+          },
         },
         totalQuantity: { $sum: "$totalQuantity" },
-        totalRevenue: { $sum: "$totalRevenue" }
-      }
+        totalRevenue: { $sum: "$totalRevenue" },
+      },
     },
     {
-      $sort: { _id: 1 }
+      $sort: { _id: 1 },
     },
     {
       $project: {
@@ -170,22 +175,24 @@ export const getMonthlyAnalytics = async (year = new Date().getFullYear()) => {
         wasteTypes: 1,
         totalQuantity: 1,
         totalRevenue: 1,
-        _id: 0
-      }
-    }
+        _id: 0,
+      },
+    },
   ]);
 
   // Fill in missing months with zero values
-  const filledMonths = Array.from({ length: 12 }, (_, i) => i + 1).map(month => {
-    const existingData = monthlyStats.find(stat => stat.month === month);
-    if (existingData) return existingData;
-    return {
-      month,
-      wasteTypes: [],
-      totalQuantity: 0,
-      totalRevenue: 0
-    };
-  });
+  const filledMonths = Array.from({ length: 12 }, (_, i) => i + 1).map(
+    (month) => {
+      const existingData = monthlyStats.find((stat) => stat.month === month);
+      if (existingData) return existingData;
+      return {
+        month,
+        wasteTypes: [],
+        totalQuantity: 0,
+        totalRevenue: 0,
+      };
+    }
+  );
 
   return filledMonths;
 };
@@ -194,13 +201,13 @@ export const getEnvironmentalImpact = async () => {
   const wasteData = await Waste.aggregate([
     {
       $group: {
-        _id: '$wasteType',
-        totalQuantity: { $sum: '$quantity' },
+        _id: "$wasteType",
+        totalQuantity: { $sum: "$quantity" },
         locationCount: {
-          $addToSet: '$location.district'
-        }
-      }
-    }
+          $addToSet: "$location.district",
+        },
+      },
+    },
   ]);
 
   let totalCarbonImpact = 0;
@@ -210,7 +217,7 @@ export const getEnvironmentalImpact = async () => {
     return {
       wasteType: _id,
       quantity: totalQuantity,
-      impact
+      impact,
     };
   });
 
@@ -218,35 +225,42 @@ export const getEnvironmentalImpact = async () => {
 
   return {
     summary: {
-      totalWasteManaged: wasteData.reduce((acc, curr) => acc + curr.totalQuantity, 0),
+      totalWasteManaged: wasteData.reduce(
+        (acc, curr) => acc + curr.totalQuantity,
+        0
+      ),
       totalCarbonImpact,
-      totalLocations: new Set(wasteData.flatMap(w => w.locationCount)).size,
+      totalLocations: new Set(wasteData.flatMap((w) => w.locationCount)).size,
     },
     impactByType,
     offsetEquivalent,
     carbonReductionProgress: {
       current: totalCarbonImpact,
       target: 100000, // Example: 100 tonnes CO2 target
-      percentageAchieved: (totalCarbonImpact / 100000) * 100
-    }
+      percentageAchieved: (totalCarbonImpact / 100000) * 100,
+    },
   };
 };
 
 export const getMapData = async (bounds) => {
   const query = {};
-  
+
   if (bounds) {
-    query['location.geoLocation'] = {
+    query["location.geoLocation"] = {
       $geoWithin: {
         $box: [
           [bounds.sw.lng, bounds.sw.lat],
-          [bounds.ne.lng, bounds.ne.lat]
-        ]
-      }
+          [bounds.ne.lng, bounds.ne.lat],
+        ],
+      },
     };
   }
 
   return await Waste.find(query)
-    .select('location quantity wasteType status')
+    .select("location quantity wasteType status")
     .lean();
+};
+
+export const getAllWaste = async () => {
+  return await Waste.find();
 };

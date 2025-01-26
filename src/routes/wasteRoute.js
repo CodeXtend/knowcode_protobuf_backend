@@ -10,8 +10,7 @@ router.get('/analytics/monthly', wasteController.getMonthlyAnalytics);
 // Public routes
 router.get('/search', wasteController.searchWaste);
 router.post('/add', wasteController.createWasteEntry);
-
-// Add these routes before the :id route
+router.get('/all', wasteController.getAllWaste);
 router.get('/impact', wasteController.getEnvironmentalImpact);
 router.get('/map', wasteController.getMapData);
 
