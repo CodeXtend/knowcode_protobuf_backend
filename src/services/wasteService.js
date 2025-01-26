@@ -65,6 +65,11 @@ export const getWasteStats = async () => {
         ],
         totalWaste: [
           {
+            $match: {
+              status: 'sold'  // Only count sold waste for revenue
+            }
+          },
+          {
             $group: {
               _id: null,
               totalQuantity: { $sum: "$quantity" },
@@ -138,6 +143,7 @@ export const getMonthlyAnalytics = async (year = new Date().getFullYear()) => {
           $gte: new Date(year, 0, 1),
           $lte: new Date(year, 11, 31),
         },
+        status: 'sold'  // Only count sold waste for revenue
       },
     },
     {
