@@ -67,19 +67,14 @@ export const getWasteStats = async () => {
         totalWaste: [
           {
             $match: {
-              status: 'sold'  // Only count sold waste for revenue
+              status: 'sold'  // Filter for sold waste only
             }
           },
           {
             $group: {
               _id: null,
               totalQuantity: { $sum: "$quantity" },
-              totalRevenue: {
-                $match: {
-                  status: 'sold'
-                },
-                $sum: { $multiply: ["$quantity", "$price"] },
-              },
+              totalRevenue: { $sum: { $multiply: ["$quantity", "$price"] } }, // Simple accumulator
               wasteByType: {
                 $push: {
                   type: "$wasteType",
