@@ -143,8 +143,7 @@ export const getMonthlyAnalytics = async (year = new Date().getFullYear()) => {
         createdAt: {
           $gte: new Date(year, 0, 1),
           $lte: new Date(year, 11, 31),
-        },
-        status: 'sold'  // Only count sold waste for revenue
+        }
       },
     },
     {
