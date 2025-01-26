@@ -87,10 +87,26 @@ export const getMonthlyAnalytics = async (req, res) => {
 
 export const searchWaste = async (req, res) => {
   try {
-    const waste = await wasteService.searchWaste(req.query);
+    const searchResult = await wasteService.searchWaste({
+      query: req.query.query,
+      cropType: req.query.cropType,
+      wasteType: req.query.wasteType,
+      status: req.query.status,
+      location: req.query.location,
+      limit: parseInt(req.query.limit) || 10,
+      skip: parseInt(req.query.skip) || 0
+    });
+    
     res.status(200).json({
       status: 'success',
-      data: { waste }
+      data: {
+        wastes: searchResult.wastes,
+        meta: {
+          total: searchResult.meta.total,
+          page: Math.floor((req.query.skip || 0) / (req.query.limit || 10)) + 1,
+          hasMore: searchResult.wastes.length === (req.query.limit || 10)
+        }
+      }
     });
   } catch (error) {
     res.status(400).json({

@@ -3,7 +3,13 @@ import mongoose from 'mongoose';
 const wasteSchema = new mongoose.Schema({
   auth0Id : {
     type: String,
-    required: true
+    required: true,
+    index: true
+  },
+  seller: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false  // Make it optional since we're using auth0Id as primary identifier
   },
   cropType: {
     type: String,
