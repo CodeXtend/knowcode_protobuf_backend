@@ -489,3 +489,46 @@ export const getDetailedWasteInfo = async (wasteId) => {
     }
   };
 };
+
+const VALID_STATUS_TRANSITIONS = {
+  available: ['booked', 'cancelled'],
+  booked: ['sold', 'available', 'cancelled'],
+  sold: ['cancelled'],
+  cancelled: ['available']
+};
+
+export const updateWasteStatus = async (wasteId, newStatus, auth0Id) => {
+  const waste = await Waste.findById(wasteId);
+  
+  if (!waste) {
+    throw new Error('Waste listing not found');
+  }
+
+  if (waste.auth0Id !== auth0Id) {
+    throw new Error('Not authorized to update this waste listing');
+  }
+
+  const validNextStatuses = VALID_STATUS_TRANSITIONS[waste.status] || [];
+  if (!validNextStatuses.includes(newStatus)) {
+    throw new Error(`Invalid status transition from ${waste.status} to ${newStatus}`);
+  }
+
+  waste.status = newStatus;
+  waste.updatedAt = new Date();
+
+  const updatedWaste = await waste.save();
+  
+  // Calculate impact of status change
+  const statusChangeImpact = {
+    timestamp: new Date(),
+    previousStatus: waste.status,
+    newStatus,
+    quantityAffected: waste.quantity,
+    environmentalImpact: calculateEnvironmentalImpact(waste.wasteType, waste.quantity)
+  };
+
+  return {
+    waste: updatedWaste,
+    statusChangeImpact
+  };
+};

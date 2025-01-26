@@ -255,3 +255,36 @@ export const getDetailedWaste = async (req, res) => {
     });
   }
 };
+
+export const updateWasteStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const auth0Id = req.auth0Id; // Assuming this comes from auth middleware
+
+    if (!status) {
+      throw new Error('Status is required');
+    }
+
+    const result = await wasteService.updateWasteStatus(id, status, auth0Id);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        waste: result.waste,
+        impact: {
+          statusChange: result.statusChangeImpact,
+          message: `Successfully updated waste status from ${result.statusChangeImpact.previousStatus} to ${status}`
+        },
+        timestamp: new Date()
+      }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message,
+      errorCode: 'STATUS_UPDATE_ERROR',
+      requestedAt: new Date()
+    });
+  }
+};

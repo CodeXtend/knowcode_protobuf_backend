@@ -22,6 +22,9 @@ router.get('/my-waste', wasteController.getFarmerWaste); // For authenticated fa
 // Detail routes
 router.get('/detail/:id', wasteController.getDetailedWaste);
 
+// Waste management routes
+router.patch('/:id/status', wasteController.updateWasteStatus);
+
 // Parameter route should be last
 router.get('/:id', wasteController.getWaste);
 
